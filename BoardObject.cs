@@ -22,9 +22,9 @@ public class BoardObject : MonoBehaviour
 
     [Header("Properties")]
     public List<BoardObjectPropertiesPair> PropList = new List<BoardObjectPropertiesPair>();
-    public Dictionary<string, float> properties = new Dictionary<string, float>();
+    public Dictionary<string, float> properties;
     public List<BoardObjectStringsPair> StringList = new List<BoardObjectStringsPair>();
-    public Dictionary<string, string> strings = new Dictionary<string, string>();
+    public Dictionary<string, string> strings;
 
     [Header("Materials")]
     public Material hexTileMaterial;
@@ -53,17 +53,57 @@ public class BoardObject : MonoBehaviour
     }
 
     private void InitializeComponents(){
-        if(properties["movable"] > 0f){
+        if(GetProperty("movable") > 0f){
             gameObject.AddComponent(typeof(BoardPathing));
             gameObject.AddComponent(typeof(MovableObject));
         }
     }
 
+    public float GetProperty(string key){
+        if(properties != null){
+            if(properties.ContainsKey(key)){
+                return properties[key];
+            }
+        }
+        else{
+            foreach(BoardObjectPropertiesPair propPair in PropList){
+                if(propPair.propName == key){
+                    return propPair.propValue;
+                }
+            }
+        }
+        Debug.LogError("Failed to get object property " + key);
+        return 0.0f;
+    }
+
+    public string GetString(string key){
+        if(strings != null){
+            if(strings.ContainsKey(key)){
+                return strings[key];
+            }
+        }
+        else{
+            foreach(BoardObjectStringsPair stringPair in StringList){
+                if(stringPair.stringName == key){
+                    return stringPair.stringValue;
+                }
+            }
+        }
+        Debug.LogError("Failed to get object string " + key);
+        return "UNDEFINED";
+    }
+
     public void Start(){
-        UpdatePosition(xCoord, zCoord);
+        if(properties.ContainsKey("editorspawn")){
+            UpdatePosition(xCoord, zCoord);
+        }
     }
 
     public void Awake(){
+
+        properties = new Dictionary<string, float>();
+        strings = new Dictionary<string, string>();
+
         // Initialize Properties
         foreach(var propPair in PropList){
             properties[propPair.propName] = propPair.propValue;

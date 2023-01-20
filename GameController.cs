@@ -32,7 +32,13 @@ public class GameController : MonoBehaviour
     }
 
     private void Start(){
+        // Initialize hex grid and overlay
+        HexGridLayout.MainGrid.SetupGrid();
+        HexOverlay.MainOverlay.SetupOverlay();
+
+        // Initialize tile properties and map
         UpdateAllTileProperties();
+        gameObject.GetComponent<MapGenerator>().InstantiateMap();
     }
 
     // Function to return each of the objects in a state
@@ -49,13 +55,14 @@ public class GameController : MonoBehaviour
     public void MoveObject(BoardObject thisObject, Vector2Int oldPos, Vector2Int newPos){
         // Remove from old position
         positionObjectsMap[oldPos].Remove(thisObject);
-        // Reset old position tile material
-        HexGridLayout.MainGrid.UpdateTileMaterial(oldPos);
         // Add to new position
         positionObjectsMap[newPos].Add(thisObject);
-        // Update new position tile material if set
+        // DEBUG
+        Debug.Log("Moved " + thisObject.GetString("name") + ". Now " + positionObjectsMap[oldPos].Count + " objects at " + oldPos.x + ", " + oldPos.y + " and " + positionObjectsMap[newPos].Count + " objects at " + newPos.x + ", " + newPos.y);
+        // Update tile material queues
         if(!(thisObject.hexTileMaterial is null)){
-            HexGridLayout.MainGrid.UpdateTileMaterial(newPos, thisObject.hexTileMaterial);
+            positionTilesMap[oldPos].DequeueOutlineMaterial(thisObject.hexTileMaterial);
+            positionTilesMap[newPos].EnqueueOutlineMaterial(thisObject.hexTileMaterial);
         }
         // Update tile properties from move
         UpdatePositionTileProperties(oldPos);

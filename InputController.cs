@@ -5,6 +5,8 @@ using UnityEngine;
 public class InputController : MonoBehaviour
 {
 
+    public Material hoverOutlineMaterial;
+
     bool hasSelection;
     private List<BoardObject> selectedObjects;
     private TileProperties selectedTile;
@@ -25,18 +27,20 @@ public class InputController : MonoBehaviour
         return new Vector2Int(-1, -1); // Trigger validation error on no hit
     }
 
-    private void ClearSelection(){
+    private void ClearTileSelection(){
+        RemoveSelectedTileOutline();
+        selectedTile = null;
+        GUIController.MainGUI.ClearTileSelection();
+    }   
 
-        // DEBUG
-        Debug.Log("Processing clear selections");
+    private void ClearObjectSelection(){
 
         // Deselect
         hasSelection = false;
         selectedObjects.Clear();
-        selectedTile = null;
-
+        
         // Clear GUI
-        GUIController.MainGUI.ClearSelections();
+        GUIController.MainGUI.ClearObjectSelection();
     }
 
     private List<BoardObject> CopyBoardObjectList(List<BoardObject> input){
@@ -47,10 +51,36 @@ public class InputController : MonoBehaviour
         return outputList;
     }
 
-    private void SelectCursorTile(){
+    private void RemoveSelectedTileOutline(){
+        // Remove highlighting from previous tile
+        if(selectedTile != null){
+            selectedTile.DequeueOutlineMaterial(hoverOutlineMaterial);
+        }
+    }
 
-        // DEBUG
-        Debug.Log("Processing select tile");
+    private void OutlineCursorTile(){
+        // Calculate where cursor is pointing and validate it
+        Vector2Int cursorPosition = CalculateMousePosition();
+        if(HexGridLayout.MainGrid.ValidatePointInGameGrid(cursorPosition)){
+
+            RemoveSelectedTileOutline();
+            
+            selectedTile = GameController.MainGame.GetPositionTile(cursorPosition);
+
+            // Update GUI with selections
+            GUIController.MainGUI.ShowSelectedTile(selectedTile);
+
+            // Apply highlighting
+            selectedTile.EnqueueOutlineMaterial(hoverOutlineMaterial);
+
+        }
+        else{
+            // On failure, clear selection
+            ClearTileSelection();
+        }
+    }
+
+    private void SelectCursorObjects(){
 
         // Calculate where cursor is pointing and validate it
         Vector2Int cursorPosition = CalculateMousePosition();
@@ -58,52 +88,46 @@ public class InputController : MonoBehaviour
             
             // Select tile from controller
             hasSelection = true;
-            selectedTile = GameController.MainGame.GetPositionTile(cursorPosition);
             // Pass copy of object so we don't lose references on move
             selectedObjects = CopyBoardObjectList(GameController.MainGame.GetPositionObjects(cursorPosition));
 
             // Update GUI with selections
-            GUIController.MainGUI.ShowSelections(selectedObjects, selectedTile);
+            GUIController.MainGUI.ShowSelections(selectedObjects);
 
         }
         else{
             // On failure, clear selection
-            ClearSelection();
+            ClearObjectSelection();
         }
     }
 
     private void IssueMoveOrder(){
         Vector2Int cursorPosition = CalculateMousePosition();
 
-        // DEBUG
-        Debug.Log("Attempting move to " + cursorPosition.x + ", " + cursorPosition.y + " on " + selectedObjects.Count + " objects");
-
         if(HexGridLayout.MainGrid.ValidatePointInGameGrid(cursorPosition)){
             
             foreach(BoardObject thisObject in selectedObjects){
 
-                // DEBUG
-                Debug.Log("Issuing move to " + cursorPosition.x + ", " + cursorPosition.y + " for " + thisObject.strings["name"]);
-
-                if(thisObject.properties["movable"] >= 1.0f){
+                if(thisObject.GetProperty("movable") >= 1.0f){
                     thisObject.GetComponent<MovableObject>().MoveToPoint(cursorPosition);
                 }
             }
-
-            // DEBUG
-            Debug.Log("After loop got " + selectedObjects.Count + " objects");
 
         }
     }
 
     public void Update(){
+        // Mouse Move
+        if(Input.GetAxis("Mouse X") != 0 || Input.GetAxis("Mouse Y") != 0){
+            OutlineCursorTile();
+        }
         // Spacebar
         if(Input.GetKeyDown("space")){
-            ClearSelection();
+            ClearObjectSelection();
         }
         // LMB click
         if(Input.GetMouseButtonDown(0)){
-            SelectCursorTile();
+            SelectCursorObjects();
         }
         // RMB click
         if(Input.GetMouseButtonDown(1)){

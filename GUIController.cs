@@ -28,18 +28,6 @@ public class GUIController : MonoBehaviour
         activeBoardObjectGuiObjects = new List<GameObject>();
     }
 
-    private void ShowSelectedTile(TileProperties tile){
-        if(tile == null){
-            selectedTileGuiObject.SetActive(false);
-        }
-        else{
-            selectedTileGuiObject.SetActive(true);
-            Text[] childText = selectedTileGuiObject.GetComponentsInChildren<Text>();
-            childText[0].text = "(" + tile.myPosition.x + ", " + tile.myPosition.y + ")";
-            childText[1].text = "Movable : " + tile.movable + "\nShade : " + tile.shade;
-        }
-    }
-
     private void ShowSelectedObjects(List<BoardObject> objects){
         foreach(BoardObject thisObject in objects){
             // Create copy of GUI tile
@@ -47,10 +35,10 @@ public class GUIController : MonoBehaviour
 
             // Update text
             Text[] childText = newObjectGui.GetComponentsInChildren<Text>();
-            childText[0].text = thisObject.strings["name"];
-            childText[1].text = thisObject.strings["tag"];
+            childText[0].text = thisObject.GetString("name");
+            childText[1].text = thisObject.GetString("tag");
             // TODO just have this iterate I think
-            childText[2].text = "Movable: " + thisObject.properties["movable"] + "\nSolid: " + thisObject.properties["solid"] + "\nSpeed: " + thisObject.properties["speed"];
+            childText[2].text = "Movable: " + thisObject.GetProperty("movable") + "\nSolid: " + thisObject.GetProperty("solid") + "\nSpeed: " + thisObject.GetProperty("speed");
 
             activeBoardObjectGuiObjects.Add(newObjectGui);
         }
@@ -63,14 +51,28 @@ public class GUIController : MonoBehaviour
         activeBoardObjectGuiObjects.Clear();
     }
 
-    public void ShowSelections(List<BoardObject> objects, TileProperties tile){
-        DeleteOldSelectionGUI();
-        ShowSelectedObjects(objects);
-        ShowSelectedTile(tile);
+    public void ShowSelectedTile(TileProperties tile){
+        if(tile == null){
+            selectedTileGuiObject.SetActive(false);
+        }
+        else{
+            selectedTileGuiObject.SetActive(true);
+            Text[] childText = selectedTileGuiObject.GetComponentsInChildren<Text>();
+            childText[0].text = "(" + tile.myPosition.x + ", " + tile.myPosition.y + ")";
+            childText[1].text = "Movable : " + tile.movable + "\nShade : " + tile.shade+ "\nWater : " + tile.water;
+        }
     }
 
-    public void ClearSelections(){
+    public void ShowSelections(List<BoardObject> objects){
         DeleteOldSelectionGUI();
+        ShowSelectedObjects(objects);
+    }
+
+    public void ClearTileSelection(){
         ShowSelectedTile(null);
+    }
+
+    public void ClearObjectSelection(){
+        DeleteOldSelectionGUI();
     }
 }

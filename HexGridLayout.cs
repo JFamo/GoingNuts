@@ -28,7 +28,7 @@ public class HexGridLayout : MonoBehaviour
         }
     }
 
-    private void OnEnable(){
+    public void SetupGrid(){
         // Load variables from game singleton
         GameController main = GameController.MainGame;
         gridSize = main.gridSize;
@@ -61,21 +61,6 @@ public class HexGridLayout : MonoBehaviour
 
                 tile.transform.SetParent(transform, true);
             }
-        }
-    }
-
-    // Update tile shading type
-    public void UpdateTileShading(Vector2Int pos, bool shaded){
-        GameObject tileObj = hexTileMap[pos];
-        if(tileObj != null){
-            HexRender hexRender = tileObj.GetComponent<HexRender>();
-            if(shaded){
-                hexRender.innerSize = 0;
-            }
-            else{
-                hexRender.outerSize = 1;
-            }
-            hexRender.DrawMesh();
         }
     }
 
@@ -124,19 +109,19 @@ public class HexGridLayout : MonoBehaviour
                 if(pos.x > 0){
                     posns.Add(new Vector2Int(pos.x - 1, pos.y));
                 }
-                if(pos.x < gridSize.x){
+                if(pos.x < gridSize.x - 1){
                     posns.Add(new Vector2Int(pos.x + 1, pos.y)); 
                 }
                 if(pos.y > 0){
                     posns.Add(new Vector2Int(pos.x, pos.y - 1));
                 }
-                if(pos.y > 0 && pos.x < gridSize.x){
+                if(pos.y > 0 && pos.x < gridSize.x - 1){
                     posns.Add(new Vector2Int(pos.x + 1, pos.y - 1));
                 }
-                if(pos.y < gridSize.y){
+                if(pos.y < gridSize.y - 1){
                     posns.Add(new Vector2Int(pos.x, pos.y + 1));  
                 }
-                if(pos.x < gridSize.x && pos.y < gridSize.y){
+                if(pos.x < gridSize.x - 1 && pos.y < gridSize.y - 1){
                     posns.Add(new Vector2Int(pos.x + 1, pos.y + 1));
                 }
             }
@@ -146,7 +131,7 @@ public class HexGridLayout : MonoBehaviour
                 if(pos.x > 0){
                     posns.Add(new Vector2Int(pos.x - 1, pos.y));
                 }
-                if(pos.x < gridSize.x){
+                if(pos.x < gridSize.x - 1){
                     posns.Add(new Vector2Int(pos.x + 1, pos.y)); 
                 }
                 if(pos.y > 0){
@@ -155,10 +140,10 @@ public class HexGridLayout : MonoBehaviour
                 if(pos.y > 0 && pos.x > 0){
                     posns.Add(new Vector2Int(pos.x - 1, pos.y - 1));
                 }
-                if(pos.y < gridSize.y){
+                if(pos.y < gridSize.y - 1){
                     posns.Add(new Vector2Int(pos.x, pos.y + 1));
                 }
-                if(pos.y < gridSize.y && pos.x > 0){
+                if(pos.y < gridSize.y - 1 && pos.x > 0){
                     posns.Add(new Vector2Int(pos.x - 1, pos.y + 1));
                 }
             }
@@ -287,7 +272,7 @@ public class HexGridLayout : MonoBehaviour
                             col = Mathf.Floor(abx / (sqThree * size));
                         }
                         else{
-                            row = Mathf.Floor(halfRow / 3);
+                            row = Mathf.Floor(halfRow / 3) + 1;
                             col = Mathf.Floor(abx / (sqThree * size));
                         }
                         return new Vector2Int((int)col, (int)row);
@@ -295,7 +280,7 @@ public class HexGridLayout : MonoBehaviour
                     else{
                         if(abz > ((halfRow+1) * halfSize) - (sqThree * remainderX)){
                             row = Mathf.Floor(halfRow / 3) + 1;
-                            col = Mathf.Floor(abx / (sqThree * size)) + 1;
+                            col = Mathf.Floor(abx / (sqThree * size));
                         }
                         else{
                             row = Mathf.Floor(halfRow / 3);
