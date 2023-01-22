@@ -32,9 +32,10 @@ public class GameController : MonoBehaviour
     }
 
     private void Start(){
-        // Initialize hex grid and overlay
+        // Initialize hex grid and overlays
         HexGridLayout.MainGrid.SetupGrid();
         HexOverlay.MainOverlay.SetupOverlay();
+        SelectionOverlay.MainSelection.SetupSelectionOverlay();
 
         // Initialize tile properties and map
         UpdateAllTileProperties();
@@ -57,8 +58,6 @@ public class GameController : MonoBehaviour
         positionObjectsMap[oldPos].Remove(thisObject);
         // Add to new position
         positionObjectsMap[newPos].Add(thisObject);
-        // DEBUG
-        Debug.Log("Moved " + thisObject.GetString("name") + ". Now " + positionObjectsMap[oldPos].Count + " objects at " + oldPos.x + ", " + oldPos.y + " and " + positionObjectsMap[newPos].Count + " objects at " + newPos.x + ", " + newPos.y);
         // Update tile material queues
         if(!(thisObject.hexTileMaterial is null)){
             positionTilesMap[oldPos].DequeueOutlineMaterial(thisObject.hexTileMaterial);

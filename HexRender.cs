@@ -45,11 +45,16 @@ public class HexRender : MonoBehaviour
     }
 
     private void OnEnable(){
-        DrawMesh();
+        //DrawMesh();
     }
 
     public void DrawMesh(){
         DrawFaces();
+        CombineFaces();
+    }
+
+    public void DrawMesh(int[] showFaces){
+        DrawSelectFaces(showFaces);
         CombineFaces();
     }
 
@@ -77,6 +82,14 @@ public class HexRender : MonoBehaviour
         }
 
         return new Face(vertices, triangles, uvs);
+    }
+
+    private void DrawSelectFaces(int[] faces){
+        m_faces = new List<Face>();
+
+        foreach(int point in faces){
+            m_faces.Add(CreateFace(innerSize, outerSize, height / 2f, height / 2f, point));
+        }
     }
 
     private void DrawFaces(){

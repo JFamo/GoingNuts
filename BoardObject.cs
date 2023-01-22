@@ -72,7 +72,7 @@ public class BoardObject : MonoBehaviour
                 }
             }
         }
-        Debug.LogError("Failed to get object property " + key);
+        Debug.LogWarning("Failed to get object property " + key);
         return 0.0f;
     }
 
@@ -89,7 +89,7 @@ public class BoardObject : MonoBehaviour
                 }
             }
         }
-        Debug.LogError("Failed to get object string " + key);
+        Debug.LogWarning("Failed to get object string " + key);
         return "UNDEFINED";
     }
 

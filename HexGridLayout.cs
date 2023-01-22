@@ -96,6 +96,7 @@ public class HexGridLayout : MonoBehaviour
     public List<Vector2Int> SuccessorsFromPosition(Vector2Int pos){
         if(GameController.MainGame.isFlatTopped){
             // TODO
+            Debug.LogError("Attempt to use flat top hex positions");
             return null;
         }
         else{
@@ -149,6 +150,40 @@ public class HexGridLayout : MonoBehaviour
             }
 
             return posns;
+        }
+    }
+
+    // Function to calculate bottom left successor from some position
+    public static Vector2Int GetBottomLeftOfPosition(Vector2Int pos){
+        if(GameController.MainGame.isFlatTopped){
+            // TODO
+            Debug.LogError("Attempt to use flat top hex positions");
+            return new Vector2Int(0,0);
+        }
+        else{
+            if(pos.y % 2 == 0){
+                return new Vector2Int(pos.x, pos.y + 1); 
+            }
+            else{
+                return new Vector2Int(pos.x - 1, pos.y + 1);
+            }
+        }
+    }
+
+    // Function to calculate bottom right successor from some position
+    public static Vector2Int GetBottomRightOfPosition(Vector2Int pos){
+        if(GameController.MainGame.isFlatTopped){
+            // TODO
+            Debug.LogError("Attempt to use flat top hex positions");
+            return new Vector2Int(0,0);
+        }
+        else{
+            if(pos.y % 2 == 0){
+                return new Vector2Int(pos.x + 1, pos.y + 1); 
+            }
+            else{
+                return new Vector2Int(pos.x, pos.y + 1);
+            }
         }
     }
 

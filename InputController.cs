@@ -6,13 +6,17 @@ public class InputController : MonoBehaviour
 {
 
     public Material hoverOutlineMaterial;
+    public float openActionThreshold = 1.5f;
 
     bool hasSelection;
     private List<BoardObject> selectedObjects;
     private TileProperties selectedTile;
+    private int selectionRadius;
+    private float rmbTimer;
 
     void Start(){
         hasSelection = false;
+        selectionRadius = 1;
         selectedObjects = new List<BoardObject>();
     }
 
@@ -28,9 +32,9 @@ public class InputController : MonoBehaviour
     }
 
     private void ClearTileSelection(){
-        RemoveSelectedTileOutline();
         selectedTile = null;
         GUIController.MainGUI.ClearTileSelection();
+        SelectionOverlay.MainSelection.ClearSelection();
     }   
 
     private void ClearObjectSelection(){
@@ -51,31 +55,22 @@ public class InputController : MonoBehaviour
         return outputList;
     }
 
-    private void RemoveSelectedTileOutline(){
-        // Remove highlighting from previous tile
-        if(selectedTile != null){
-            selectedTile.DequeueOutlineMaterial(hoverOutlineMaterial);
-        }
-    }
-
     private void OutlineCursorTile(){
         // Calculate where cursor is pointing and validate it
         Vector2Int cursorPosition = CalculateMousePosition();
         if(HexGridLayout.MainGrid.ValidatePointInGameGrid(cursorPosition)){
 
-            RemoveSelectedTileOutline();
-            
+            // Compute selected tile
             selectedTile = GameController.MainGame.GetPositionTile(cursorPosition);
 
             // Update GUI with selections
             GUIController.MainGUI.ShowSelectedTile(selectedTile);
 
-            // Apply highlighting
-            selectedTile.EnqueueOutlineMaterial(hoverOutlineMaterial);
+            // Trigger selection overlay
+            SelectionOverlay.MainSelection.SelectPointWithRadius(cursorPosition,selectionRadius);
 
         }
         else{
-            // On failure, clear selection
             ClearTileSelection();
         }
     }
@@ -116,6 +111,25 @@ public class InputController : MonoBehaviour
         }
     }
 
+    private void OpenActionDialog(){
+        Vector2Int cursorPosition = CalculateMousePosition();
+
+        if(HexGridLayout.MainGrid.ValidatePointInGameGrid(cursorPosition)){
+
+            foreach(BoardObject thisObject in selectedObjects){
+
+                if(thisObject.GetProperty("movable") >= 1.0f){
+                    List<BoardObject> targetObjects = CopyBoardObjectList(GameController.MainGame.GetPositionObjects(cursorPosition));
+                    TileProperties targetTile = GameController.MainGame.GetPositionTile(cursorPosition);
+                    List<string> possibleActions = ActionManager.GetPossibleActions(thisObject, targetObjects, targetTile);
+                    ActionGUIController.MainActionGUI.CreateActionUIAtPosition(cursorPosition, possibleActions);
+                }
+
+            }
+
+        }
+    }
+
     public void Update(){
         // Mouse Move
         if(Input.GetAxis("Mouse X") != 0 || Input.GetAxis("Mouse Y") != 0){
@@ -123,7 +137,14 @@ public class InputController : MonoBehaviour
         }
         // Spacebar
         if(Input.GetKeyDown("space")){
+            if(selectionRadius < 6){
+                selectionRadius++;
+            }
+            else{
+                selectionRadius = 1;
+            }
             ClearObjectSelection();
+            OutlineCursorTile();
         }
         // LMB click
         if(Input.GetMouseButtonDown(0)){
@@ -131,7 +152,22 @@ public class InputController : MonoBehaviour
         }
         // RMB click
         if(Input.GetMouseButtonDown(1)){
-            IssueMoveOrder();
+            rmbTimer = Time.time;
+        }
+        // RMB held
+        if(Input.GetMouseButton(1)){
+            if(Time.time - rmbTimer >= openActionThreshold){
+                OpenActionDialog();
+            }
+        }
+        // RMB release
+        if(Input.GetMouseButtonUp(1)){
+            if(Time.time - rmbTimer < openActionThreshold){
+                IssueMoveOrder();
+            }
+            else{
+                // TODO do action
+            }
         }
     }
 }

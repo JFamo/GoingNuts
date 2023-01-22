@@ -39,12 +39,24 @@ public class TileProperties
     // Setter for shade
     public void SetShade(float shade){
         this.shade = shade;
+        if(this.shade < 0.0f){
+            this.shade = 0.0f;
+        }
+        if(this.shade > 1.0f){
+            this.shade = 1.0f;
+        }
         UpdateOverlay();
     }
 
     // Setter for water
     public void SetWater(float water){
         this.water = water;
+        if(this.water < 0.0f){
+            this.water = 0.0f;
+        }
+        if(this.water > 1.0f){
+            this.water = 1.0f;
+        }
         UpdateOverlay();
     }
 
