@@ -58,7 +58,7 @@ public class GUIController : MonoBehaviour
         else{
             selectedTileGuiObject.SetActive(true);
             Text[] childText = selectedTileGuiObject.GetComponentsInChildren<Text>();
-            childText[0].text = "(" + tile.myPosition.x + ", " + tile.myPosition.y + ")";
+            childText[0].text = "(" + tile.tilePosition.x + ", " + tile.tilePosition.y + ")";
             childText[1].text = "Movable : " + tile.movable + "\nShade : " + tile.shade+ "\nWater : " + tile.water;
         }
     }

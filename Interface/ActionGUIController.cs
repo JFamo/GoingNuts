@@ -15,9 +15,14 @@ public class ActionGUIController : MonoBehaviour
     public Transform radialBar;
     public int radius = 500;
     public int offset = 10;
+    public float degreeRange = 80.0f;
+    public float insensitiveSelectionRange = 10.0f;
 
     private List<GameObject> activeBars;
     private Dictionary<string, Transform> actionIconsMap;
+    private Vector3 initialMousePosition;
+    private Dictionary<int, string> activeIconList;
+    private Image highlightedActionIcon;
 
     void Awake(){
         // Setup singleton
@@ -36,6 +41,7 @@ public class ActionGUIController : MonoBehaviour
         radialBar.gameObject.SetActive(false);
 
         activeBars = new List<GameObject>();
+        activeIconList = new Dictionary<int, string>();
 
         CreateActionIconsMap();
     }
@@ -45,11 +51,75 @@ public class ActionGUIController : MonoBehaviour
         actionGUI.localScale = new Vector3(newScale,newScale,newScale);
     }
 
-    public void CreateActionUIAtPosition(Vector2Int gameCoordinates, List<string> availableActions){
+    public void CreateActionUIAtPosition(Vector2Int gameCoordinates, List<string> availableActions, Vector3 initialMousePosition){
         DisableAllIcons();
+        this.initialMousePosition = initialMousePosition;
         actionGUI.position = HexGridLayout.GetPositionForHexFromCoord(gameCoordinates);
         actionGUI.gameObject.SetActive(true);
         InitializeActionIcons(availableActions);
+    }
+
+    private string GetSelectedAction(Vector3 mousePosition){
+
+        // Handle empty actionlist
+        if(activeIconList.Count == 0){
+            Debug.LogError("Trying to select default action from empty list");
+            return "UNDEFINED";
+        }
+
+        // Handle inner circle default
+        if(Vector3.Distance(initialMousePosition, mousePosition) <= insensitiveSelectionRange){
+            return activeIconList[0];
+        }
+
+        // Calculate relative mouse posn
+        float xDiff = mousePosition.x - initialMousePosition.x;
+        float yDiff = mousePosition.y - initialMousePosition.y;
+
+        // Calculate angle of mouse posn
+        float innerAngle = RadiansToDegrees(Mathf.Atan(yDiff / xDiff));
+
+        // Handle Q2 and Q4 cases
+        if(innerAngle <= 0.0f){
+            if(xDiff >= 0.0f){
+                return activeIconList[0];
+            }
+            else{
+                return activeIconList[activeIconList.Count - 1];
+            }
+        }
+
+        // Calculate value from inside offset
+        if(innerAngle <= this.offset){
+            return activeIconList[0];
+        }
+
+        // Calculate index from inner angle Q1 and Q3
+        int selectedIndex = (int)Mathf.Floor((activeIconList.Count / this.degreeRange) * (innerAngle - this.offset));
+
+        return activeIconList[selectedIndex];
+
+    }
+
+    public void UpdateSelectionFromMousePosition(Vector3 newMousePosition){
+        // Compute selected action
+        string selectionAction = GetSelectedAction(newMousePosition);
+
+        // Undo highlighting on image if present
+        if(highlightedActionIcon != null){
+            highlightedActionIcon.color = new Color32(255,255,255,255);
+        }
+
+        // Apply highlighting to image
+        Image thisImage = actionIconsMap[selectionAction].gameObject.GetComponent<Image>();
+        thisImage.color = new Color32(100, 255, 255, 255);
+        highlightedActionIcon = thisImage;
+    }
+
+    public string SubmitAction(Vector3 mousePosition){
+        string thisAction = GetSelectedAction(mousePosition);
+        DisableAllIcons();
+        return thisAction;
     }
 
     private float CalculateScale(){
@@ -65,26 +135,34 @@ public class ActionGUIController : MonoBehaviour
             Destroy(bar);
         }
         activeBars.Clear();
+        activeIconList.Clear();
     }
 
     private float DegreesToRadians(float deg){
         return Mathf.PI * deg / 180.0f;
     }
 
+    private float RadiansToDegrees(float rads){
+        return rads * 180.0f / Mathf.PI;
+    }
+
     private int CalculateBarAngle(int index, int count){
-        return -90 + (int)(this.offset + (index * 80 / count));
+        return -90 + (int)(this.offset + (index * this.degreeRange / count));
     }
 
     private Vector3 CalculateIconPosition(int index, int count){
-        int yPosn = (int)(this.radius * Mathf.Sin(DegreesToRadians(this.offset + (index * 80 / count))));
-        int xPosn = (int)(this.radius * Mathf.Cos(DegreesToRadians(this.offset + (index * 80 / count))));
+        int yPosn = (int)(this.radius * Mathf.Sin(DegreesToRadians(this.offset + (index * this.degreeRange / count))));
+        int xPosn = (int)(this.radius * Mathf.Cos(DegreesToRadians(this.offset + (index * this.degreeRange / count))));
         return new Vector3(xPosn, yPosn, 0);
     }
 
     private void InitializeActionIcon(string actionName, int index, int totalCount){
+        // Activate action icon
         actionIconsMap[actionName].gameObject.SetActive(true);
         actionIconsMap[actionName].localPosition = CalculateIconPosition(index, totalCount);
-        Debug.Log("Using calculated position " + CalculateIconPosition(index, totalCount).x + ", " + CalculateIconPosition(index, totalCount).y);
+        activeIconList.Add(index, actionName);
+
+        // Initialize radial bar
         GameObject thisRadialBar = Instantiate(radialBar.gameObject, actionGUI);
         thisRadialBar.GetComponent<RectTransform>().rotation = Quaternion.Euler(50,0, CalculateBarAngle(index, totalCount));
         thisRadialBar.GetComponent<RectTransform>().SetAsFirstSibling();

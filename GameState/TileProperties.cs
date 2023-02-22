@@ -5,7 +5,7 @@ using System.Linq;
 
 public class TileProperties
 {
-    public Vector2Int myPosition;
+    public Vector2Int tilePosition;
     public bool movable;
     public float shade;
     public float water;
@@ -13,7 +13,7 @@ public class TileProperties
     private List<Material> outlineMaterials;
 
     public TileProperties(Vector2Int posn){
-        this.myPosition = posn;
+        this.tilePosition = posn;
         this.movable = true;
         this.shade = 0.0f;
         this.water = 0.0f;
@@ -22,7 +22,7 @@ public class TileProperties
     }
 
     public TileProperties(Vector2Int posn, bool movable, float shade, float water){
-        this.myPosition = posn;
+        this.tilePosition = posn;
         this.movable = movable;
         this.shade = shade;
         this.water = water;
@@ -60,10 +60,48 @@ public class TileProperties
         UpdateOverlay();
     }
 
+    // Adder for shade
+    public void AddShade(float diff)
+    {
+        this.shade = this.shade + diff;
+        if (this.shade < 0.0f)
+        {
+            this.shade = 0.0f;
+        }
+        if (this.shade > 1.0f)
+        {
+            this.shade = 1.0f;
+        }
+        UpdateOverlay();
+    }
+
+    // Adder for water
+    public void AddWater(float diff)
+    {
+        this.water = this.water + diff;
+        if (this.water < 0.0f)
+        {
+            this.water = 0.0f;
+        }
+        if (this.water > 1.0f)
+        {
+            this.water = 1.0f;
+        }
+        UpdateOverlay();
+    }
+
+    // Function to check whether position is growable
+    public bool CanGrow(){
+        if(this.movable && this.water >= 0.6f && this.shade <= 0.3f){
+            return true;
+        }
+        return false;
+    }
+
     // Function to update whether this tile is movable
     private void UpdateMovable(){
         bool canMove = true;
-        List<BoardObject> occupants = GameController.MainGame.GetPositionObjects(myPosition);
+        List<BoardObject> occupants = GameController.MainGame.GetPositionObjects(tilePosition);
         foreach(BoardObject obj in occupants){
             //DEBUG
             if(obj.GetProperty("solid") > 0f){
@@ -76,16 +114,16 @@ public class TileProperties
 
     // Function to update shade at this tile
     private void UpdateOverlay(){
-        HexOverlay.MainOverlay.UpdateOverlayAtPosition(myPosition, this);
+        HexOverlay.MainOverlay.UpdateOverlayAtPosition(tilePosition, this);
     }
 
     // Function to recompute and apply outline material
     private void RecomputeOutline(){
         if(outlineMaterials.Count > 0){
-            HexGridLayout.MainGrid.UpdateTileMaterial(myPosition, outlineMaterials.Last());
+            HexGridLayout.MainGrid.UpdateTileMaterial(tilePosition, outlineMaterials.Last());
         }
         else{
-            HexGridLayout.MainGrid.UpdateTileMaterial(myPosition);
+            HexGridLayout.MainGrid.UpdateTileMaterial(tilePosition);
         }
     }
 
@@ -99,5 +137,16 @@ public class TileProperties
     public void DequeueOutlineMaterial(Material mat){
         outlineMaterials.Remove(mat); // TODO could need to change this logic because remove pops first occurence
         RecomputeOutline();
+    }
+
+    // Function to get adjacent TileProperties
+    public List<TileProperties> GetAdjacentTileProperties()
+    {
+        List <TileProperties> adjacentProperties = new List<TileProperties>();
+        foreach (Vector2Int adjacentTile in HexGridLayout.MainGrid.SuccessorsFromPosition(tilePosition))
+        {
+            adjacentProperties.Add(GameController.MainGame.GetPositionTile(adjacentTile));
+        }
+        return adjacentProperties;
     }
 }

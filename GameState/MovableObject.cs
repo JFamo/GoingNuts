@@ -8,6 +8,7 @@ public class MovableObject : MonoBehaviour
 {
     private BoardPathing myPathing;
     private BoardObject myObject;
+    private ExecutorObject subscribedExecutor;
 
     private List<Vector2Int> queue;
     private Vector2Int lastTarget;
@@ -17,9 +18,13 @@ public class MovableObject : MonoBehaviour
     private void PathToPoint(Vector2Int point){
         // For now, force the mover to stop and start a new path
         queue.Clear();
+        if (subscribedExecutor != null)
+        {
+            subscribedExecutor.NotifyNewPath();
+        }
 
         // Check if solid object, abort
-        if(!GameController.MainGame.GetPositionTile(point).movable){
+        if (!GameController.MainGame.GetPositionTile(point).movable){
             return;
         }
 
@@ -49,6 +54,16 @@ public class MovableObject : MonoBehaviour
         PathToPoint(point);
         lastTarget = point;
     }
+
+    // Function to handle a pathing failure
+    private void HandlePathingFailure()
+    {
+        if(subscribedExecutor != null)
+        {
+            subscribedExecutor.NotifyPathingFailure();
+        }
+        queue.Clear();
+    }
     
     private void MoveToNext(){
         if(queue.Count > 0){
@@ -56,11 +71,21 @@ public class MovableObject : MonoBehaviour
             if(GameController.MainGame.GetPositionTile(nextPosn).movable){
                 myObject.UpdatePosition(nextPosn.x, nextPosn.y);
                 queue.RemoveAt(0);
+                if(subscribedExecutor != null)
+                {
+                    subscribedExecutor.NotifyPathingUpdate(nextPosn);
+                }
             }
             else{
-                queue.Clear(); // If we encounter a solid, stop moving
+                HandlePathingFailure();
             }
         }
+    }
+
+    // Function to subscribe an executor to receive broadcasts from this mover
+    public void SubscribeExecutor(ExecutorObject thisExecutor)
+    {
+        this.subscribedExecutor = thisExecutor;
     }
 
     public void Update(){

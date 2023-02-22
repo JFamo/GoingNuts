@@ -22,7 +22,7 @@ public class BoardPathing : MonoBehaviour
             this.fValue = fValue;
         }
     }
-
+    
     // Comparator for Pathing Nodes
     public class ByFValueComparator : IComparer<PathingNode>
     {
@@ -174,7 +174,7 @@ public class BoardPathing : MonoBehaviour
                 else{
 
                     // DEBUG draw text
-                    DrawSuccessorText(successor, succF);
+                    // DrawSuccessorText(successor, succF);
 
                     // Add successor to open list
                     var story = openList.Add(new PathingNode(successor, AppendValueToArray(next.ancestors, successor), succG, succF));

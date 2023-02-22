@@ -52,6 +52,28 @@ public class GameController : MonoBehaviour
         return positionTilesMap[posn];
     }
 
+    // Function to create object
+    public void CreateObject(BoardObject thisObject)
+    {
+        Vector2Int newPos = thisObject.GetPosition();
+        positionObjectsMap[newPos].Add(thisObject);
+        if (!(thisObject.hexTileMaterial is null))
+        {
+            positionTilesMap[newPos].EnqueueOutlineMaterial(thisObject.hexTileMaterial);
+        }
+        UpdatePositionTileProperties(newPos);
+    }
+
+    // Function to destroy object
+    public void DestroyObject(BoardObject thisObject){
+        Vector2Int oldPos = thisObject.GetPosition();
+        positionObjectsMap[oldPos].Remove(thisObject);
+        if(!(thisObject.hexTileMaterial is null)){
+            positionTilesMap[oldPos].DequeueOutlineMaterial(thisObject.hexTileMaterial);
+        }
+        UpdatePositionTileProperties(oldPos);
+    }
+
     // Function to move object
     public void MoveObject(BoardObject thisObject, Vector2Int oldPos, Vector2Int newPos){
         // Remove from old position

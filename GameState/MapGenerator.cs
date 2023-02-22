@@ -107,8 +107,10 @@ public class MapGenerator : MonoBehaviour
         int[,] boardSetup = new int[gridSize.x, gridSize.y];
 
         boardSetup[gridSize.x / 2, gridSize.y / 2] = 1; // Put player at middle
+        boardSetup[gridSize.x / 2 + 1, gridSize.y / 2] = 1; // Put player at middle
+        boardSetup[gridSize.x / 2 + 3, gridSize.y / 2] = 1; // Put player at middle
 
-        for(int x = 0; x < gridSize.x; x ++){
+        for (int x = 0; x < gridSize.x; x ++){
             for(int y = 0; y < gridSize.y; y ++){
                 if(boardSetup[x,y] != 1){
                     boardSetup[x,y] = ComputeGridAtPosition(boardSetup, x, y);

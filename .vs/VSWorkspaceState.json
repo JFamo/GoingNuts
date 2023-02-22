@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Controls",
+    "\\GameState",
+    "\\Handlers",
+    "\\HexGrids",
+    "\\Interface"
+  ],
+  "SelectedNode": "\\GameState\\MovableObject.cs",
+  "PreviewInSolutionExplorer": false
+}

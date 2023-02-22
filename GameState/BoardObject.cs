@@ -30,6 +30,8 @@ public class BoardObject : MonoBehaviour
     public Material hexTileMaterial;
     public Material targetHexTileMaterial;
 
+    private Dictionary<string, IEffectHandler> handlers;
+
     public void UpdatePosition(float newx, float newz){
         // Build posn
         Vector2Int gridIntPosn = new Vector2Int((int)newx, (int)newz);
@@ -56,6 +58,15 @@ public class BoardObject : MonoBehaviour
         if(GetProperty("movable") > 0f){
             gameObject.AddComponent(typeof(BoardPathing));
             gameObject.AddComponent(typeof(MovableObject));
+        }
+        if(GetProperty("executor") > 0f)
+        {
+            gameObject.AddComponent(typeof(ExecutorObject));
+            // Subscribe executor to mover if both present
+            if(GetProperty("movable") > 0f)
+            {
+                gameObject.GetComponent<MovableObject>().SubscribeExecutor(gameObject.GetComponent<ExecutorObject>());
+            }
         }
     }
 
@@ -93,10 +104,27 @@ public class BoardObject : MonoBehaviour
         return "UNDEFINED";
     }
 
-    public void Start(){
-        if(properties.ContainsKey("editorspawn")){
-            UpdatePosition(xCoord, zCoord);
+    public IEffectHandler GetEffectHandler(string key){
+        if(handlers != null){
+            if(handlers.ContainsKey(key)){
+                return handlers[key];
+            }
         }
+        return null;
+    }
+
+    private Dictionary<string, IEffectHandler> InitializeEffectHandlers(){
+        Dictionary<string, IEffectHandler> outputHandlerMap = new Dictionary<string, IEffectHandler>();
+
+        IEffectHandler[] handlers = gameObject.GetComponentsInChildren<IEffectHandler>();
+
+        foreach(IEffectHandler handler in handlers){
+            foreach(string actionName in handler.actionNames){
+                outputHandlerMap.Add(actionName, handler);
+            }
+        }
+
+        return outputHandlerMap;
     }
 
     public void Awake(){
@@ -114,6 +142,12 @@ public class BoardObject : MonoBehaviour
             strings[stringPair.stringName] = stringPair.stringValue;
         }
 
+        // Initialize handlers
+        handlers = InitializeEffectHandlers();
+
         InitializeComponents();
+
+        // Call Game Controller to init this board object
+        GameController.MainGame.CreateObject(this);
     }
 }
