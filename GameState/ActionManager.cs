@@ -58,18 +58,17 @@ public class ActionManager : MonoBehaviour
 
     public static bool IsActionInPlace(ExecutorAction action)
     {
-        if(action == ExecutorAction.GROW || action == ExecutorAction.MOVE || action == ExecutorAction.CLEAR || action == ExecutorAction.GATHER)
+        if(action == ExecutorAction.GROW || action == ExecutorAction.MOVE || action == ExecutorAction.CLEAR)
         {
             return true;
         }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 
     // Function to get the default action given a selected object and target position
     public static ExecutorAction GetDefaultAction(BoardObject subject, List<BoardObject> targetObjects, TileProperties targetTile){
+
+        bool canMove = true;
 
         // First, check for collectable
         foreach(BoardObject thisObject in targetObjects){
@@ -77,9 +76,18 @@ public class ActionManager : MonoBehaviour
             if(thisObject.GetProperty("collectable") >= 1.0f){
                 return ExecutorAction.GATHER;
             }
+            else if(thisObject.GetProperty("solid") >= 1.0f){
+                canMove = false;
+            }
 
         }
 
+        // Next, try to move
+        if(canMove){
+            return ExecutorAction.MOVE;
+        }
+
+        // Otherwise, do nothing
         return ExecutorAction.NONE;
 
     }

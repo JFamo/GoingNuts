@@ -17,7 +17,7 @@ public class SaplingGrowEffectHandler : IEffectHandler
         newTransformationObject.GetComponent<BoardObject>().UpdatePosition(thisTile.tilePosition.x, thisTile.tilePosition.y);
 
         // Update tile
-        thisTile.AddWater(0.6f);
+        thisTile.AddWater(0.2f);
         thisTile.AddShade(0.8f);
 
         // Update adjacent tiles

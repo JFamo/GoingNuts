@@ -105,6 +105,9 @@ public class ExecutorObject : MonoBehaviour
                 thisHandler.applyEffect(targetObject, GameController.MainGame.GetPositionTile(this.targetPosition));
             }
         }
+
+        // Move to target tile again, which has no effect on inplace or solids, but handles collection
+        gameObject.GetComponent<MovableObject>().MoveToPoint(this.targetPosition);
     }
 
     // Function to a Mover to notify of a pathing failure, such as a blocker

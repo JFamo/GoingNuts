@@ -145,7 +145,10 @@ public class InputController : MonoBehaviour
                 if(boardObject.GetProperty("executor") > 0f)
                 {
                     action = ActionManager.GetDefaultAction(boardObject, targetObjects, targetTile);
-                    boardObject.GetComponent<ExecutorObject>().handleAction(action, targetTile.tilePosition);
+                    
+                    if(action != ExecutorAction.NONE){
+                        boardObject.GetComponent<ExecutorObject>().handleAction(action, targetTile.tilePosition);
+                    }
                 }
             }
         }

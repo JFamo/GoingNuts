@@ -38,14 +38,18 @@ public class MovableObject : MonoBehaviour
         }
     }
 
+    // Function to remove pathing highlight on failure
+    private void RemoveTargetHighlight(){
+        TileProperties oldTile = GameController.MainGame.GetPositionTile(lastTarget);
+        oldTile.DequeueOutlineMaterial(myObject.targetHexTileMaterial);
+    }
+
     // Function to highlight the selected hex to move to
     private void ShowTargetPosition(Vector2Int posn){
-        // Reset last target posn
-        HexGridLayout.MainGrid.UpdateTileMaterial(lastTarget);
-        // Show new target posn
-        if(myObject.targetHexTileMaterial != null){
-            HexGridLayout.MainGrid.UpdateTileMaterial(posn, myObject.targetHexTileMaterial);
-        }
+        RemoveTargetHighlight();
+
+        TileProperties newTargetTile = GameController.MainGame.GetPositionTile(posn);    
+        newTargetTile.EnqueueOutlineMaterial(myObject.targetHexTileMaterial);
     }
 
     // Public interface to issue a move command to some point
@@ -75,9 +79,15 @@ public class MovableObject : MonoBehaviour
                 {
                     subscribedExecutor.NotifyPathingUpdate(nextPosn);
                 }
+
+                // Handle arrival
+                if(queue.Count == 0){
+                    RemoveTargetHighlight();
+                }
             }
             else{
                 HandlePathingFailure();
+                RemoveTargetHighlight();
             }
         }
     }
