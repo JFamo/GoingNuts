@@ -6,7 +6,7 @@ using static System.Collections.Specialized.BitVector32;
 
 public class ExecutorObject : MonoBehaviour
 {
-    private string queuedTrigger;
+    private ExecutorAction queuedTrigger;
     private bool hasTrigger;
     private Vector2Int triggerTarget;
     private Vector2Int targetPosition;
@@ -16,7 +16,7 @@ public class ExecutorObject : MonoBehaviour
         hasTrigger = false;
     }
 
-    private void SetTrigger(string trigger)
+    private void SetTrigger(ExecutorAction trigger)
     {
         this.queuedTrigger = trigger;
         this.hasTrigger = true;
@@ -24,7 +24,7 @@ public class ExecutorObject : MonoBehaviour
 
     private void StopTrigger()
     {
-        this.queuedTrigger = "";
+        this.queuedTrigger = ExecutorAction.NONE;
         this.hasTrigger = false;
     }
 
@@ -52,7 +52,7 @@ public class ExecutorObject : MonoBehaviour
     }
 
     // Function to handle a given action targeting a given point
-    public void handleAction(string action, Vector2Int targetPosition)
+    public void handleAction(ExecutorAction action, Vector2Int targetPosition)
     {
         this.targetPosition = targetPosition;
 
@@ -92,8 +92,11 @@ public class ExecutorObject : MonoBehaviour
     // Actually execute the trigger by broadcasting it to handlers at each BoardObject on the target tile
     private void executeTrigger()
     {
+        // Make copy to avoid modification errors
+        List<BoardObject> targetPosnObjects = new List<BoardObject>(GameController.MainGame.GetPositionObjects(this.targetPosition));
+        
         // Send action to each BoardObject at position
-        foreach (BoardObject targetObject in GameController.MainGame.GetPositionObjects(this.targetPosition))
+        foreach (BoardObject targetObject in targetPosnObjects)
         {
             // Get this object's handler for our action
             IEffectHandler thisHandler = targetObject.GetEffectHandler(this.queuedTrigger);

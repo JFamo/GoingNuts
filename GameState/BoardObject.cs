@@ -2,6 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum BOProp {
+    SPEED,
+    SOLID,
+    MOVABLE,
+    COLLECTABLE,
+    CLEARABLE,
+    EXECUTOR,
+    CANGROW
+}
+
 public class BoardObject : MonoBehaviour
 {
     [System.Serializable]
@@ -30,7 +40,7 @@ public class BoardObject : MonoBehaviour
     public Material hexTileMaterial;
     public Material targetHexTileMaterial;
 
-    private Dictionary<string, IEffectHandler> handlers;
+    private Dictionary<ExecutorAction, IEffectHandler> handlers;
 
     public void UpdatePosition(float newx, float newz){
         // Build posn
@@ -104,7 +114,7 @@ public class BoardObject : MonoBehaviour
         return "UNDEFINED";
     }
 
-    public IEffectHandler GetEffectHandler(string key){
+    public IEffectHandler GetEffectHandler(ExecutorAction key){
         if(handlers != null){
             if(handlers.ContainsKey(key)){
                 return handlers[key];
@@ -113,13 +123,13 @@ public class BoardObject : MonoBehaviour
         return null;
     }
 
-    private Dictionary<string, IEffectHandler> InitializeEffectHandlers(){
-        Dictionary<string, IEffectHandler> outputHandlerMap = new Dictionary<string, IEffectHandler>();
+    private Dictionary<ExecutorAction, IEffectHandler> InitializeEffectHandlers(){
+        Dictionary<ExecutorAction, IEffectHandler> outputHandlerMap = new Dictionary<ExecutorAction, IEffectHandler>();
 
         IEffectHandler[] handlers = gameObject.GetComponentsInChildren<IEffectHandler>();
 
         foreach(IEffectHandler handler in handlers){
-            foreach(string actionName in handler.actionNames){
+            foreach(ExecutorAction actionName in handler.actionNames){
                 outputHandlerMap.Add(actionName, handler);
             }
         }

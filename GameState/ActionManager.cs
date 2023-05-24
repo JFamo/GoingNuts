@@ -2,9 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum ExecutorAction {
+    NONE,
+    MOVE,
+    GROW,
+    CLEAR,
+    GATHER,
+    FIGHT
+}
+
 public class ActionManager : MonoBehaviour
 {
-    public static List<string> GetPossibleActions(BoardObject subject, List<BoardObject> targetObjects, TileProperties targetTile){
+    public static List<ExecutorAction> GetPossibleActions(BoardObject subject, List<BoardObject> targetObjects, TileProperties targetTile){
 
         bool canMove = true;
         bool canClear = false;
@@ -25,31 +34,31 @@ public class ActionManager : MonoBehaviour
 
         }
 
-        List<string> possibleActions = new List<string>();
+        List<ExecutorAction> possibleActions = new List<ExecutorAction>();
 
         if(canMove){
-            possibleActions.Add("move");
+            possibleActions.Add(ExecutorAction.MOVE);
         }
         if(targetTile.CanGrow()){
-            possibleActions.Add("grow");
+            possibleActions.Add(ExecutorAction.GROW);
         }
         if(canClear){
-            possibleActions.Add("clear");
+            possibleActions.Add(ExecutorAction.CLEAR);
         }
         if(canGather){
-            possibleActions.Add("gather");
+            possibleActions.Add(ExecutorAction.GATHER);
         }
         if(canFight){
-            possibleActions.Add("fight");
+            possibleActions.Add(ExecutorAction.FIGHT);
         }
 
         return possibleActions;
 
     }
 
-    public static bool IsActionInPlace(string action)
+    public static bool IsActionInPlace(ExecutorAction action)
     {
-        if(action == "grow" || action == "move" || action == "clear")
+        if(action == ExecutorAction.GROW || action == ExecutorAction.MOVE || action == ExecutorAction.CLEAR || action == ExecutorAction.GATHER)
         {
             return true;
         }
@@ -59,26 +68,20 @@ public class ActionManager : MonoBehaviour
         }
     }
 
-    // DEFUNCT - Now using executor for handling actions
-    public static void ProcessAction(string action, List<BoardObject> selectedObjects, List<BoardObject> targetObjects, TileProperties targetTile){
-        // Handle move
-        foreach(BoardObject selectedObject in selectedObjects){
-            if(action == "move" && selectedObject.GetProperty("movable") >= 1.0f){
-                selectedObject.GetComponent<MovableObject>().MoveToPoint(targetTile.tilePosition);
+    // Function to get the default action given a selected object and target position
+    public static ExecutorAction GetDefaultAction(BoardObject subject, List<BoardObject> targetObjects, TileProperties targetTile){
+
+        // First, check for collectable
+        foreach(BoardObject thisObject in targetObjects){
+
+            if(thisObject.GetProperty("collectable") >= 1.0f){
+                return ExecutorAction.GATHER;
             }
-            if(action == "grow"){
-                IEffectHandler thisHandler = selectedObject.GetEffectHandler(action);
-                if(thisHandler != null){
-                    thisHandler.applyEffect(selectedObject, targetTile);
-                }
-            }
+
         }
-        // Apply effects
-        foreach(BoardObject targetObject in targetObjects){
-            IEffectHandler thisHandler = targetObject.GetEffectHandler(action);
-            if(thisHandler != null){
-                thisHandler.applyEffect(targetObject, targetTile);
-            }
-        }
+
+        return ExecutorAction.NONE;
+
     }
+
 }

@@ -24,9 +24,9 @@ public class MovableObject : MonoBehaviour
         }
 
         // Check if solid object, abort
-        if (!GameController.MainGame.GetPositionTile(point).movable){
-            return;
-        }
+        // if (!GameController.MainGame.GetPositionTile(point).movable){
+        //     return;
+        // }
 
         // Execute AStar pathing
         Vector2Int[] path = myPathing.AStarPath(myObject.GetPosition(), point);

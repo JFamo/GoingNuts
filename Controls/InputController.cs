@@ -57,11 +57,7 @@ public class InputController : MonoBehaviour
     }
 
     private List<BoardObject> CopyBoardObjectList(List<BoardObject> input){
-        List<BoardObject> outputList = new List<BoardObject>();
-        foreach(BoardObject thisObject in input){
-            outputList.Add(thisObject);
-        }
-        return outputList;
+        return new List<BoardObject>(input);
     }
 
     private void OutlineCursorTile(){
@@ -103,34 +99,19 @@ public class InputController : MonoBehaviour
         }
     }
 
-    private void IssueMoveOrder(){
-        Vector2Int cursorPosition = CalculateMousePosition();
-
-        if(HexGridLayout.MainGrid.ValidatePointInGameGrid(cursorPosition)){
-            
-            foreach(BoardObject thisObject in selectedObjects){
-
-                if(thisObject.GetProperty("movable") >= 1.0f){
-                    thisObject.GetComponent<MovableObject>().MoveToPoint(cursorPosition);
-                }
-            }
-
-        }
-    }
-
     private void OpenActionDialog(){
         Vector2Int cursorPosition = CalculateMousePosition();
 
         if(HexGridLayout.MainGrid.ValidatePointInGameGrid(cursorPosition)){
 
-            List<string> possibleActions = new List<string>();
+            List<ExecutorAction> possibleActions = new List<ExecutorAction>();
 
             foreach(BoardObject thisObject in selectedObjects){
 
                 if(thisObject.GetProperty("movable") >= 1.0f){
                     targetObjects = CopyBoardObjectList(GameController.MainGame.GetPositionObjects(cursorPosition));
                     targetTile = GameController.MainGame.GetPositionTile(cursorPosition);
-                    foreach(string action in ActionManager.GetPossibleActions(thisObject, targetObjects, targetTile))
+                    foreach(ExecutorAction action in ActionManager.GetPossibleActions(thisObject, targetObjects, targetTile))
                     {
                         possibleActions.Add(action);
                     }
@@ -147,12 +128,36 @@ public class InputController : MonoBehaviour
         }
     }
 
+    // Function to submit a default action, when we select and release RMB on any square to an executor
+    private void SubmitDefaultAction(){
+        ExecutorAction action;
+        actionDialogOpen = false;
+
+        // Get targeted tile and its objects
+        Vector2Int cursorPosition = CalculateMousePosition();
+        if(HexGridLayout.MainGrid.ValidatePointInGameGrid(cursorPosition)){
+            targetObjects = CopyBoardObjectList(GameController.MainGame.GetPositionObjects(cursorPosition));
+            targetTile = GameController.MainGame.GetPositionTile(cursorPosition);
+
+            // Look for executors of action among selected
+            foreach(BoardObject boardObject in selectedObjects.ToList())
+            {
+                if(boardObject.GetProperty("executor") > 0f)
+                {
+                    action = ActionManager.GetDefaultAction(boardObject, targetObjects, targetTile);
+                    boardObject.GetComponent<ExecutorObject>().handleAction(action, targetTile.tilePosition);
+                }
+            }
+        }
+    }
+
+    // Function to submit the selected action via mouseover from an open action dialog to an executor
     private void SubmitActionDialog(){
-        string action = ActionGUIController.MainActionGUI.SubmitAction(Input.mousePosition);
+        ExecutorAction action = ActionGUIController.MainActionGUI.SubmitAction(Input.mousePosition);
         actionDialogOpen = false;
 
         // Look for executors of action among selected
-        foreach(BoardObject boardObject in selectedObjects)
+        foreach(BoardObject boardObject in selectedObjects.ToList())
         {
             if(boardObject.GetProperty("executor") > 0f)
             {
@@ -168,7 +173,7 @@ public class InputController : MonoBehaviour
         {
             if(boardObject.GetProperty("executor") > 0f && boardObject.GetProperty("canGrow") > 0f)
             {
-                boardObject.GetComponent<ExecutorObject>().handleAction("grow", posns[posnIterator]);
+                boardObject.GetComponent<ExecutorObject>().handleAction(ExecutorAction.GROW, posns[posnIterator]);
                 posnIterator += 1;
             }
         }
@@ -281,7 +286,7 @@ public class InputController : MonoBehaviour
             }
             else{
                 if(!actionDialogOpen){
-                    IssueMoveOrder();
+                    SubmitDefaultAction();
                 }
                 else{
                     SubmitActionDialog();

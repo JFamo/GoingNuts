@@ -10,7 +10,7 @@ public class ActionGUIController : MonoBehaviour
 
     [Header("Action GUI Settings")]
     public Transform actionGUI;
-    public string[] actionNamesList;
+    public ExecutorAction[] actionNamesList;
     public Transform[] actionIconsList;
     public Transform radialBar;
     public int radius = 500;
@@ -19,9 +19,9 @@ public class ActionGUIController : MonoBehaviour
     public float insensitiveSelectionRange = 10.0f;
 
     private List<GameObject> activeBars;
-    private Dictionary<string, Transform> actionIconsMap;
+    private Dictionary<ExecutorAction, Transform> actionIconsMap;
     private Vector3 initialMousePosition;
-    private Dictionary<int, string> activeIconList;
+    private Dictionary<int, ExecutorAction> activeIconList;
     private Image highlightedActionIcon;
 
     void Awake(){
@@ -41,7 +41,7 @@ public class ActionGUIController : MonoBehaviour
         radialBar.gameObject.SetActive(false);
 
         activeBars = new List<GameObject>();
-        activeIconList = new Dictionary<int, string>();
+        activeIconList = new Dictionary<int, ExecutorAction>();
 
         CreateActionIconsMap();
     }
@@ -51,7 +51,7 @@ public class ActionGUIController : MonoBehaviour
         actionGUI.localScale = new Vector3(newScale,newScale,newScale);
     }
 
-    public void CreateActionUIAtPosition(Vector2Int gameCoordinates, List<string> availableActions, Vector3 initialMousePosition){
+    public void CreateActionUIAtPosition(Vector2Int gameCoordinates, List<ExecutorAction> availableActions, Vector3 initialMousePosition){
         DisableAllIcons();
         this.initialMousePosition = initialMousePosition;
         actionGUI.position = HexGridLayout.GetPositionForHexFromCoord(gameCoordinates);
@@ -59,12 +59,12 @@ public class ActionGUIController : MonoBehaviour
         InitializeActionIcons(availableActions);
     }
 
-    private string GetSelectedAction(Vector3 mousePosition){
+    private ExecutorAction GetSelectedAction(Vector3 mousePosition){
 
         // Handle empty actionlist
         if(activeIconList.Count == 0){
             Debug.LogError("Trying to select default action from empty list");
-            return "UNDEFINED";
+            return ExecutorAction.NONE;
         }
 
         // Handle inner circle default
@@ -103,7 +103,7 @@ public class ActionGUIController : MonoBehaviour
 
     public void UpdateSelectionFromMousePosition(Vector3 newMousePosition){
         // Compute selected action
-        string selectionAction = GetSelectedAction(newMousePosition);
+        ExecutorAction selectionAction = GetSelectedAction(newMousePosition);
 
         // Undo highlighting on image if present
         if(highlightedActionIcon != null){
@@ -116,8 +116,8 @@ public class ActionGUIController : MonoBehaviour
         highlightedActionIcon = thisImage;
     }
 
-    public string SubmitAction(Vector3 mousePosition){
-        string thisAction = GetSelectedAction(mousePosition);
+    public ExecutorAction SubmitAction(Vector3 mousePosition){
+        ExecutorAction thisAction = GetSelectedAction(mousePosition);
         DisableAllIcons();
         return thisAction;
     }
@@ -128,7 +128,7 @@ public class ActionGUIController : MonoBehaviour
     }
 
     private void DisableAllIcons(){
-        foreach(KeyValuePair<string, Transform> iconEntry in actionIconsMap){
+        foreach(KeyValuePair<ExecutorAction, Transform> iconEntry in actionIconsMap){
             iconEntry.Value.gameObject.SetActive(false);
         }
         foreach(GameObject bar in activeBars){
@@ -156,7 +156,7 @@ public class ActionGUIController : MonoBehaviour
         return new Vector3(xPosn, yPosn, 0);
     }
 
-    private void InitializeActionIcon(string actionName, int index, int totalCount){
+    private void InitializeActionIcon(ExecutorAction actionName, int index, int totalCount){
         // Activate action icon
         actionIconsMap[actionName].gameObject.SetActive(true);
         actionIconsMap[actionName].localPosition = CalculateIconPosition(index, totalCount);
@@ -170,9 +170,9 @@ public class ActionGUIController : MonoBehaviour
         activeBars.Add(thisRadialBar);
     }
 
-    private void InitializeActionIcons(List<string> availableActions){
+    private void InitializeActionIcons(List<ExecutorAction> availableActions){
         int i = 0;
-        foreach(string actionName in availableActions){
+        foreach(ExecutorAction actionName in availableActions){
             InitializeActionIcon(actionName, i, availableActions.Count);
             i += 1;
         }
@@ -183,7 +183,7 @@ public class ActionGUIController : MonoBehaviour
             Debug.LogError("Action GUI names list size does not match GUI icons list!");
         }
         else{
-            actionIconsMap = new Dictionary<string, Transform>();
+            actionIconsMap = new Dictionary<ExecutorAction, Transform>();
 
             for(int i = 0; i < actionNamesList.Length; i ++){
                 actionIconsMap.Add(actionNamesList[i], actionIconsList[i]);
